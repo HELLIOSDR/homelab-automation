@@ -16,6 +16,7 @@ load_dotenv(Path.home() / "ai_agent/.env")
 import anthropic
 import sensor_fusion
 from sensors import sms as sms_sensor
+from autonomy import Watchdog, ResourceManager, ConnectionGuard, ProactiveIntelligence, IdentityManager
 
 # ── Konfiguracja ──────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")
@@ -258,13 +259,20 @@ def _is_authorized(number: str) -> bool:
 # ── Main loop ─────────────────────────────────────────────────────────────────
 
 async def main():
-    log.info(f"═══ {AGENT_NAME} startuje ═══")
+    # Startup z tożsamością
+    log.info(IdentityManager.startup_message())
     log.info(f"Claude API: {'✓' if ANTHROPIC_API_KEY else '✗ (brak klucza)'}")
-    log.info(f"Sensory: GPS, SMS, kamera, ruch, audio, system")
     log.info(f"API server: port {API_PORT}")
 
+    # Zainstaluj watchdog (self-healing)
+    Watchdog.install()
+
+    # Inicjalizacja autonomii
     l2 = Level2Brain()
     l1 = Level1Engine(l2)
+    resources = ResourceManager()
+    connection = ConnectionGuard()
+    proactive = ProactiveIntelligence()
 
     # Uruchom API server w tle
     asyncio.create_task(_start_api_server(l2))
@@ -272,19 +280,34 @@ async def main():
     iteration = 0
     while True:
         try:
-            include_photo = False  # zdjęcie co N iteracji jeśli potrzebne
+            # Power save = rzadziej skanuj sensory
+            interval = SENSOR_INTERVAL * (3 if resources.is_power_save else 1)
+            include_photo = False
+
             ctx = await sensor_fusion.snapshot(include_photo=include_photo)
 
             summary = sensor_fusion.context_summary(ctx)
-            if iteration % 6 == 0:  # log co minutę (6 * 10s)
+            if iteration % 6 == 0:
                 log.info(f"Context: {summary}")
 
+            # Poziom 1: reguły lokalne
             actions = await l1.process(ctx)
+
+            # Autonomia: zarządzanie zasobami
+            actions += await resources.check(ctx)
+
+            # Autonomia: proaktywna inteligencja
+            actions += await proactive.analyze(ctx)
+
+            # Autonomia: chroń połączenia
+            await connection.ensure_connectivity()
+
+            # Wykonaj wszystkie akcje
             for action in actions:
                 await execute_action(action)
 
             iteration += 1
-            await asyncio.sleep(SENSOR_INTERVAL)
+            await asyncio.sleep(interval)
 
         except asyncio.CancelledError:
             break

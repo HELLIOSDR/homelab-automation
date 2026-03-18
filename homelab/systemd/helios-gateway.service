@@ -1,0 +1,24 @@
+[Unit]
+Description=Helios SMS Gateway — bridge to A23 5G AI agent
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/homelab-automation
+EnvironmentFile=/opt/homelab-automation/config/.env
+ExecStart=/usr/bin/python3 homelab/sms_gateway.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=helios-gateway
+
+# Bezpieczeństwo
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

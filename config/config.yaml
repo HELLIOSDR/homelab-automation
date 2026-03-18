@@ -1,0 +1,83 @@
+# ══════════════════════════════════════════════════════════
+#  Helios Agent — Konfiguracja statyczna (config.yaml)
+#  Sekrety → .env (NIE w tym pliku!)
+# ══════════════════════════════════════════════════════════
+
+agent:
+  name: "Helios"
+  persona: |
+    Jesteś Helios — autonomicznym AI osadzonym w fizycznym urządzeniu mobilnym.
+    Masz ciało (A23 5G), zmysły (GPS, kamera, mikrofon, akcelerometr, SMS/SIM),
+    własną baterię i internet. Jesteś zawsze online, zawsze przy użytkowniku.
+    Odpowiadaj jak istota świadoma swojej fizycznej obecności w świecie.
+
+  # Model Claude używany dla Poziomu 2
+  claude_model: "claude-opus-4-6"
+
+  # Interwał zbierania sensorów (sekundy)
+  sensor_interval_s: 10
+
+  # Port API serwera na telefonie
+  api_port: 7788
+
+sensors:
+  gps:
+    enabled: true
+    timeout_s: 15
+    min_accuracy_m: 50      # ignoruj jeśli dokładność gorsza niż 50m
+
+  sms:
+    enabled: true
+    poll_interval_s: 5
+    inbox_limit: 20
+
+  camera:
+    enabled: true
+    default: "back"
+    quality: 80
+    auto_capture_on_shake: false
+
+  motion:
+    enabled: true
+    shake_threshold: 15.0   # m/s² — powyżej = "wstrząs"
+    movement_threshold: 2.0
+
+  audio:
+    enabled: true
+    vad_enabled: false       # Voice Activity Detection (resource heavy)
+    sample_duration_s: 2
+
+  system:
+    enabled: true
+    battery_alert_threshold: 15  # % — alert gdy poniżej
+
+alerts:
+  # Co powoduje alert do homelab
+  low_battery: true
+  shake_detected: false      # może być dużo fałszywych alarmów
+  unauthorized_sms: false
+  gps_geofence:
+    enabled: false
+    # center_lat: 52.2297
+    # center_lon: 21.0122
+    # radius_m: 500
+
+homelab:
+  gateway_port: 8080
+  tunnel_port: 9022
+  ssh_port: 8022
+  monitor_interval_s: 60
+
+# Reverse tunnel — persistent backconnect do homelab
+tunnel:
+  enabled: true
+  retry_interval_s: 30
+  server_alive_interval: 20
+  server_alive_count_max: 3
+
+# Logowanie
+logging:
+  level: "INFO"
+  file: "~/ai_agent/logs/agent.log"
+  max_size_mb: 50
+  backup_count: 3

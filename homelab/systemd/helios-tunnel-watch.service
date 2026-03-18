@@ -1,0 +1,27 @@
+[Unit]
+Description=Helios SSH Tunnel Watchdog — utrzymuje reverse tunnel do A23 5G
+After=network.target helios-gateway.service
+
+[Service]
+Type=simple
+User=pi
+Restart=always
+RestartSec=5
+ExecStart=/bin/bash -c '\
+    while true; do \
+        ssh -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=20 \
+            -o ServerAliveCountMax=3 \
+            -o ExitOnForwardFailure=yes \
+            -N -R ${TUNNEL_PORT:-9022}:localhost:8022 \
+            -i /opt/homelab-automation/config/ssh/phone_to_homelab \
+            ${HOMELAB_USER:-pi}@localhost \
+        || true; \
+        sleep 5; \
+    done'
+EnvironmentFile=/opt/homelab-automation/config/.env
+StandardOutput=journal
+SyslogIdentifier=helios-tunnel
+
+[Install]
+WantedBy=multi-user.target

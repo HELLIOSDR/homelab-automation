@@ -1,0 +1,30 @@
+# Sekrety — NIGDY nie commituj
+config/.env
+agent/.env
+*.env
+!*.env.example
+
+# Dane robocze
+.root_work/
+.apks/
+config/device_profile.json
+config/connection_info.json
+config/ssh/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Logi i dane agenta
+agent/logs/
+agent/data/
+
+# OS
+.DS_Store
+Thumbs.db

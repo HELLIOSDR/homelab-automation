@@ -9,44 +9,42 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: pip install pytest pytest-asyncio psutil
+        run: pip install pytest pytest-asyncio psutil pydantic fastapi aiohttp python-dotenv
 
       - name: Syntax check — Python
         run: |
-          for f in agent/*.py homelab/*.py; do
+          for f in agent/*.py agent/sensors/*.py homelab/*.py; do
             python3 -m py_compile "$f" && echo "OK: $f"
           done
 
       - name: Syntax check — Bash
         run: |
-          for f in scripts/**/*.sh cascade.sh; do
+          for f in scripts/adb/*.sh scripts/root/*.sh scripts/termux/*.sh cascade.sh; do
             bash -n "$f" && echo "OK: $f"
           done
 
       - name: Run tests
         run: python3 -m pytest tests/ -v
 
-  lint:
+  secrets:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Check for secrets in code
+      - name: Scan for leaked secrets
         run: |
-          # Szukaj przypadkowych kluczy API w kodzie (nie w .env)
-          if grep -r "sk-ant-" --include="*.py" .; then
-            echo "BŁĄD: Znaleziono klucz Anthropic w kodzie!"
-            exit 1
+          if grep -rn "sk-ant-" --include="*.py" --include="*.sh" --include="*.yaml" .; then
+            echo "BŁĄD: Znaleziono klucz Anthropic w kodzie!"; exit 1
           fi
           echo "OK: brak sekretów w kodzie"

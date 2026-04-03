@@ -1,0 +1,9 @@
+#!/bin/bash
+# Pre-push hook — blokuje push jeśli testy nie przejdą
+echo "[pre-push] Uruchamiam testy..."
+python3 -m pytest tests/ -q --tb=short
+if [ $? -ne 0 ]; then
+  echo "[pre-push] TESTY NIE PRZESZŁY — push zablokowany"
+  exit 1
+fi
+echo "[pre-push] OK — push dozwolony"

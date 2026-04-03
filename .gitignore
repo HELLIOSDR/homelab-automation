@@ -2,6 +2,7 @@
 config/.env
 agent/.env
 *.env
+.env
 !*.env.example
 
 # Dane robocze
@@ -20,11 +21,23 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
 
 # Logi i dane agenta
 agent/logs/
 agent/data/
+*.log
 
-# OS
+# Dane multimedialne
+data/photos/
+data/audio/
+
+# Temporary files
+/tmp/
+
+# IDE / Editor
 .DS_Store
+.idea/
+.vscode/
 Thumbs.db
+.claude/

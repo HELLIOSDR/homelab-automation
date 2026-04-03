@@ -1,5 +1,6 @@
 """Camera sensor — zdjęcia przez Termux:API"""
 import subprocess, base64, os, time
+from typing import Optional
 from pathlib import Path
 
 PHOTO_DIR = Path.home() / "ai_agent/data/photos"
